@@ -4,86 +4,7 @@ Column configs organized by category. Copy, customize the prompts, and pass to `
 
 ---
 
-## Category A: Positioning Axis Columns
-
-### Breadth vs Depth
-
-```json
-{
-  "kind": "agent",
-  "name": "Axis: Breadth vs Depth",
-  "key": "axis_breadth_depth",
-  "value": {
-    "agent_type": "research_reasoning",
-    "prompt": "Evaluate where {input} sits on the spectrum from 'Point Solution' to 'Full Suite'. Consider: how many distinct product capabilities do they offer? Do they focus on one thing or cover a broad workflow? 1 = pure point solution (single function), 3 = multi-feature with clear core, 5 = all-in-one platform. Return ONLY a number 1-5.",
-    "output_format": "grade"
-  }
-}
-```
-
-### SMB vs Enterprise
-
-```json
-{
-  "kind": "agent",
-  "name": "Axis: SMB vs Enterprise",
-  "key": "axis_smb_enterprise",
-  "value": {
-    "agent_type": "research_reasoning",
-    "prompt": "Evaluate where {input} sits on the spectrum from SMB to Enterprise. Consider: pricing (free/<$50 = SMB, $50K+ ACV = enterprise), sales model (self-serve vs sales-led), product complexity, and customer logos. 1 = pure SMB/freelancer, 3 = mid-market, 5 = pure enterprise. Return ONLY a number 1-5.",
-    "output_format": "grade"
-  }
-}
-```
-
-### Self-Serve vs Sales-Led
-
-```json
-{
-  "kind": "agent",
-  "name": "Axis: Self-Serve vs Sales-Led",
-  "key": "axis_selfserve_salesled",
-  "value": {
-    "agent_type": "research_reasoning",
-    "prompt": "Evaluate the go-to-market approach of {input}. Can users sign up and use the product without talking to sales? Is there a free trial or freemium? Or must users request a demo / go through procurement? 1 = fully self-serve, 3 = hybrid, 5 = fully sales-led. Return ONLY a number 1-5.",
-    "output_format": "grade"
-  }
-}
-```
-
-### Simple vs Powerful
-
-```json
-{
-  "kind": "agent",
-  "name": "Axis: Simple vs Powerful",
-  "key": "axis_simple_powerful",
-  "value": {
-    "agent_type": "research_reasoning",
-    "prompt": "Evaluate the product complexity of {input}. Is it easy to set up in minutes with opinionated defaults, or highly configurable with a steep learning curve? Consider onboarding time, documentation depth, and target user technical level. 1 = dead simple, 3 = moderate complexity, 5 = highly technical and configurable. Return ONLY a number 1-5.",
-    "output_format": "grade"
-  }
-}
-```
-
-### Horizontal vs Vertical
-
-```json
-{
-  "kind": "agent",
-  "name": "Axis: Horizontal vs Vertical",
-  "key": "axis_horizontal_vertical",
-  "value": {
-    "agent_type": "research_reasoning",
-    "prompt": "Evaluate whether {input} is a general-purpose (horizontal) or industry-specific (vertical) product. Does it serve all industries equally, or is it built for specific verticals with specialized features? 1 = fully horizontal, 3 = multi-vertical, 5 = single-industry vertical. Return ONLY a number 1-5.",
-    "output_format": "grade"
-  }
-}
-```
-
----
-
-## Category B: Feature/Capability Columns
+## Category A: Feature/Capability Columns
 
 ### Template — Capability Area Rating
 
@@ -113,47 +34,7 @@ Customize `{AREA_NAME}` and the capability list per market.
 
 ---
 
-## Category C: Third-Party Intelligence Columns
-
-### Review Sentiment
-
-```json
-{
-  "kind": "agent",
-  "name": "Review Sentiment",
-  "key": "review_sentiment",
-  "value": {
-    "agent_type": "research_pro",
-    "prompt": "Find reviews of {input} on G2, Capterra, TrustRadius, or Product Hunt. Return a JSON object with: overall_rating (number out of 5, or null), review_count (number, or null), top_praise (string — most common positive theme), top_complaint (string — most common negative theme), sources (array of site names where data was found). If no reviews found, return null for all fields.",
-    "output_format": "json",
-    "output_schema": {
-      "type": "object",
-      "properties": {
-        "overall_rating": {"type": ["number", "null"]},
-        "review_count": {"type": ["number", "null"]},
-        "top_praise": {"type": ["string", "null"]},
-        "top_complaint": {"type": ["string", "null"]},
-        "sources": {"type": "array", "items": {"type": "string"}}
-      }
-    }
-  }
-}
-```
-
-### Analyst Positioning
-
-```json
-{
-  "kind": "agent",
-  "name": "Analyst Positioning",
-  "key": "analyst_positioning",
-  "value": {
-    "agent_type": "research_pro",
-    "prompt": "How do industry analysts (Gartner, Forrester, IDC, CB Insights) position {input}? Is it mentioned in any Magic Quadrant, Wave, MarketScape, or market map? What category and position? If no analyst coverage found, return 'No analyst coverage found'.",
-    "output_format": "text"
-  }
-}
-```
+## Category B: Intelligence Columns
 
 ### Recent Funding
 
@@ -164,16 +45,86 @@ Customize `{AREA_NAME}` and the capability list per market.
   "key": "recent_funding",
   "value": {
     "agent_type": "research_pro",
-    "prompt": "Find the most recent funding information for {input}. Return a JSON object with: last_round (e.g. 'Series B'), amount (e.g. '$25M'), date (e.g. '2024-06'), lead_investor (name), total_raised (e.g. '$45M'). If bootstrapped, set last_round to 'Bootstrapped'. If public, set last_round to 'Public'. If unknown, return null values.",
+    "prompt": "Find the most recent funding information for {input}. Use credible sources such as Crunchbase, PitchBook, or press releases. Search in the company's primary language (e.g., if the company is Brazilian, search in Portuguese). Return a JSON object with: last_round (e.g. 'Series B'), amount (e.g. '$25M' or 'R$10M'), date (e.g. '2024-06'), lead_investor (name), total_raised (e.g. '$45M'). If bootstrapped, set last_round to 'Bootstrapped'. If unknown, use 'Unknown'.",
     "output_format": "json",
     "output_schema": {
       "type": "object",
       "properties": {
-        "last_round": {"type": ["string", "null"]},
-        "amount": {"type": ["string", "null"]},
-        "date": {"type": ["string", "null"]},
-        "lead_investor": {"type": ["string", "null"]},
-        "total_raised": {"type": ["string", "null"]}
+        "last_round": {"type": "string"},
+        "amount": {"type": "string"},
+        "date": {"type": "string"},
+        "lead_investor": {"type": "string"},
+        "total_raised": {"type": "string"}
+      }
+    }
+  }
+}
+```
+
+### Parent Ownership
+
+```json
+{
+  "kind": "agent",
+  "name": "Parent Ownership",
+  "key": "parent_ownership",
+  "value": {
+    "agent_type": "research_pro",
+    "prompt": "Determine the ownership structure of {input}. Search in the company's primary language. Is it: independent/founder-led, PE-backed (which firm?), a subsidiary of a larger company (which parent?), publicly traded (which exchange?), or acquired (by whom, when)? Return a JSON object with: status (one of: 'Independent', 'PE-backed', 'Subsidiary', 'Public', 'Acquired'), parent_or_investor (name of parent company, PE firm, or acquirer — 'N/A' if independent), details (1 sentence with context). Use Crunchbase, PitchBook, LinkedIn, or press releases.",
+    "output_format": "json",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {"type": "string"},
+        "parent_or_investor": {"type": "string"},
+        "details": {"type": "string"}
+      }
+    }
+  }
+}
+```
+
+### Key Clients
+
+```json
+{
+  "kind": "agent",
+  "name": "Key Clients",
+  "key": "key_clients",
+  "value": {
+    "agent_type": "research_pro",
+    "prompt": "Find notable clients or customers of {input}. Search the company's website (case studies, logos, testimonials), press releases, and review sites. Search in the company's primary language. Return a JSON object with: clients (array of up to 10 company names), source (where you found this — e.g. 'website logos', 'case study', 'G2 review', 'press release'). If no clients found, return empty array and source 'Not found'.",
+    "output_format": "json",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "clients": {"type": "array", "items": {"type": "string"}},
+        "source": {"type": "string"}
+      }
+    }
+  }
+}
+```
+
+### Review Sentiment
+
+```json
+{
+  "kind": "agent",
+  "name": "Review Sentiment",
+  "key": "review_sentiment",
+  "value": {
+    "agent_type": "research_pro",
+    "prompt": "Find reviews of {input} on G2, Capterra, TrustRadius, Product Hunt, or local review sites relevant to the company's market. Return a JSON object with: overall_rating (number out of 5, or 0 if unknown), review_count (number, or 0 if unknown), top_praise (string — most common positive theme, or 'N/A'), top_complaint (string — most common negative theme, or 'N/A'), sources (array of site names where data was found, empty array if none).",
+    "output_format": "json",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "overall_rating": {"type": "number"},
+        "review_count": {"type": "number"},
+        "top_praise": {"type": "string"},
+        "top_complaint": {"type": "string"},
+        "sources": {"type": "array", "items": {"type": "string"}}
       }
     }
   }
@@ -204,7 +155,7 @@ Customize `{AREA_NAME}` and the capability list per market.
   "key": "recent_news",
   "value": {
     "agent_type": "research_pro",
-    "prompt": "Find the most significant news about {input} from the last 12 months. Focus on: product launches, partnerships, acquisitions, leadership changes, or market expansion. Return 2-3 bullet points with dates. If no significant news found, return 'No significant recent news found'.",
+    "prompt": "Find the most significant news about {input} from the last 12 months. Search in the company's primary language. Focus on: product launches, partnerships, acquisitions, leadership changes, or market expansion. Return 2-3 bullet points with dates. If no significant news found, return 'No significant recent news found'.",
     "output_format": "text"
   }
 }
@@ -230,14 +181,14 @@ Customize `{AREA_NAME}` and the capability list per market.
 
 ## Column Budget Guidance
 
-| Map complexity | Axis columns | Capability columns | Intelligence columns | Total |
-|---------------|-------------|-------------------|---------------------|-------|
-| Quick scan | 2-3 | 0 | 3-4 | 5-7 |
-| Standard map | 3-4 | 3-5 | 5-6 | 11-15 |
-| Deep analysis | 4-5 | 5-8 | 6 | 15-19 |
+| Map complexity | Capability columns | Intelligence columns | Total |
+|---------------|-------------------|---------------------|-------|
+| Quick scan | 0 | 4-5 | 4-5 |
+| Standard map | 0 | 7 | 7 |
+| Deep analysis | 3-5 | 7 | 10-12 |
+
+**Standard 7 intelligence columns:** Recent Funding, Parent Ownership, Key Clients, Review Sentiment, Hiring Signals, Recent News, Target Market.
 
 **Rules:**
-- Direct competitors get ALL columns (axis + capability + intelligence)
-- Indirect competitors get axis + intelligence, capability columns optional
-- Adjacent competitors get axis + intelligence (skip capability)
-- Substitute solutions (software-adjacent) get intelligence only
+- All tables get the standard intelligence columns
+- Capability columns are optional, only for direct competitors in deep analysis mode
