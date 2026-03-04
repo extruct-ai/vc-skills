@@ -6,6 +6,13 @@ Maintained by [Extruct AI](https://www.extruct.ai).
 
 > **These skills are templates.** They show one way to run VC market mapping workflows using Extruct and Claude Code. Fork them, adapt to your workflow. The skill patterns are the value, the specific integrations are up to you.
 
+## Install
+
+```
+/plugin marketplace add extruct-ai/vc-skills
+/plugin install vc-skills
+```
+
 ## Quick Start
 
 **Start from a company:**
