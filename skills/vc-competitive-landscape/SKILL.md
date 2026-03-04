@@ -239,9 +239,54 @@ Note any notable companies Discovery found that semantic search missed.
 
 ---
 
-### Phase D: Competitive Enrichment
+### Phase D: Relevance Validation
 
-Design and run enrichment columns on the tables.
+Before running expensive enrichment, validate that every company in the tables actually belongs in the target market. Semantic search returns false positives — companies with similar keywords but different markets.
+
+**Step 1: Add a relevance check column**
+
+Add a single `select` column to each table:
+
+```json
+{
+  "kind": "agent",
+  "name": "Market Relevance",
+  "key": "market_relevance",
+  "value": {
+    "agent_type": "research_reasoning",
+    "prompt": "Does {input} operate in the {MARKET_DESCRIPTION} market? Check the company's website and product description. Return ONLY one label.",
+    "output_format": "select",
+    "labels": ["Yes — core market", "Partially relevant", "No — different market"]
+  }
+}
+```
+
+Customize `{MARKET_DESCRIPTION}` from market_context.md (e.g., "AI-powered legal software in Brazil").
+
+**Step 2: Run relevance check and wait for completion**
+
+Trigger `POST /tables/{table_id}/run` for the relevance column only. Poll until complete. This is a cheap `research_reasoning` column — fast to run.
+
+**Step 3: Remove irrelevant companies**
+
+Fetch table data. For each row where `market_relevance` = "No — different market":
+- Delete the row via `DELETE /tables/{table_id}/rows/{row_id}`
+
+Report:
+
+| Table | Before | Removed | After |
+|-------|--------|---------|-------|
+| Direct | N | -N | N |
+| Indirect | N | -N | N |
+| Adjacent | N | -N | N |
+
+Companies marked "Partially relevant" stay — they may be indirect or adjacent competitors.
+
+---
+
+### Phase E: Competitive Enrichment
+
+Design and run enrichment columns on the validated tables.
 
 **Step 1: Select columns**
 

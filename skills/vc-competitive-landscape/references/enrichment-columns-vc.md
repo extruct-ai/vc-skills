@@ -4,6 +4,28 @@ Column configs organized by category. Copy, customize the prompts, and pass to `
 
 ---
 
+## Relevance Validation Column
+
+Run this BEFORE the intelligence columns to filter out false positives from search results. Customize `{MARKET_DESCRIPTION}` from market_context.md.
+
+```json
+{
+  "kind": "agent",
+  "name": "Market Relevance",
+  "key": "market_relevance",
+  "value": {
+    "agent_type": "research_reasoning",
+    "prompt": "Does {input} operate in the {MARKET_DESCRIPTION} market? Check the company's website and product description. Return ONLY one label.",
+    "output_format": "select",
+    "labels": ["Yes — core market", "Partially relevant", "No — different market"]
+  }
+}
+```
+
+After running: delete rows where result = "No — different market". Keep "Partially relevant" — they may be indirect/adjacent.
+
+---
+
 ## Category A: Feature/Capability Columns
 
 ### Template — Capability Area Rating
