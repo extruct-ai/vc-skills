@@ -1,0 +1,14 @@
+{
+  "name": "vc-skills",
+  "owner": {
+    "name": "Extruct"
+  },
+  "plugins": [
+    {
+      "name": "vc-skills",
+      "description": "VC market mapping: define markets, scope competitors across 4 levels, enrich with positioning axes and intelligence, and assemble market map reports.",
+      "source": "./",
+      "version": "1.0.0"
+    }
+  ]
+}
