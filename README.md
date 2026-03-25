@@ -34,14 +34,16 @@ Each prompt triggers the skills automatically. Claude will research, propose a m
 
 ## Skills
 
-Two skills that work together as a pipeline. Each also works independently.
+Three skills: a shared API layer and two VC-specific skills that work together as a pipeline.
 
 ```
+extruct-api (shared)
 market-definition → competitive-landscape
 ```
 
 | Skill | Description |
 |-------|-------------|
+| **extruct-api** | Core Extruct API wrapper. Covers semantic search, lookalike search, Deep Search, company and people tables, column operations, enrichment, and contact finding. Shared with GTM skills. |
 | **vc-market-definition** | Define market context: positioning axes, capability areas, buyer personas. Two entry modes: start from a company domain or a market category. |
 | **vc-competitive-landscape** | Full competitor analysis: scope 4 levels (direct, indirect, adjacent, substitute), discover via semantic + lookalike + deep search, enrich with positioning axes and competitive intelligence. |
 
@@ -80,4 +82,4 @@ Only the Extruct API token is needed.
 
 | Variable | Service | Used by |
 |----------|---------|---------|
-| `EXTRUCT_API_TOKEN` | [Extruct API](https://www.extruct.ai/docs) | vc-market-definition, vc-competitive-landscape |
+| `EXTRUCT_API_TOKEN` | [Extruct API](https://www.extruct.ai/docs) | extruct-api, vc-market-definition, vc-competitive-landscape |

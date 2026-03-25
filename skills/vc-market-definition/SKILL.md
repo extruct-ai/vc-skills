@@ -19,12 +19,6 @@ Define the market context that drives all downstream skills. Two entry modes: st
 |----------|---------|
 | `EXTRUCT_API_TOKEN` | Extruct API |
 
-Base URL: `https://api.extruct.ai/v1`
-
-## Official API Reference
-
-- https://www.extruct.ai/docs/api-reference/introduction
-
 ## Workflow
 
 ### Step 1: Determine entry mode
@@ -40,8 +34,8 @@ Ask the user:
 
 **Mode A — Company entry:**
 
-1. Look up the company via `GET /companies/search?q={domain}&limit=1` to get its profile (name, description, employee count, founding year).
-2. Run 1-2 broad Extruct searches to discover similar companies and understand the market landscape.
+1. Look up the company via the `extruct-api` skill: run a semantic search with the company domain to get its profile (name, description, employee count, founding year).
+2. Run 1-2 broad Extruct searches (via `extruct-api`) to discover similar companies and understand the market landscape.
 3. **Draft the market description yourself** (2-3 sentences) based on the company profile, search results, and any context the user already provided (e.g., "AI legal SaaS in Brazil"). Do NOT ask the user to write it — present your draft for confirmation.
 4. Ask: "Are there any well-known competitors you can name?" (These become seed companies for lookalike search later.) If the user says no, use companies found in search results as seeds.
 
@@ -51,7 +45,7 @@ Ask the user:
 2. Ask: "Can you name 2-3 example companies in this market?" (Optional, but helps ground the definition.)
 
 **In both modes:**
-- Infer geographic scope from context (e.g., "Brazil" was mentioned → Brazil). Only ask if genuinely ambiguous.
+- Infer geographic scope from context (e.g., "Brazil" was mentioned -> Brazil). Only ask if genuinely ambiguous.
 - Default company stage to "all stages" unless the user specified otherwise.
 - Minimize questions. Draft proposals and confirm, don't ask open-ended questions the skill can answer itself.
 
@@ -161,7 +155,7 @@ Preferred axes: {which axes}
 ## Handling Knowledge Gaps
 
 If you need deeper market data that you don't have:
-1. First, try running a broad Extruct search (`GET /companies/search`) to discover companies in the space and learn from their descriptions.
+1. First, try running a broad Extruct search (via `extruct-api` skill) to discover companies in the space and learn from their descriptions.
 2. If that's insufficient, ask the user: "I need more context on [specific aspect]. Can you provide additional research or context?"
 3. Never guess or fabricate market data. If uncertain, say so and ask.
 

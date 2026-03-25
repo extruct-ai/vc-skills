@@ -14,17 +14,13 @@ description: >
 
 Scope, discover, enrich, and compare competitors across 4 levels. This is the core skill — it takes a market definition and produces enriched Extruct tables and feature comparison matrices.
 
+All Extruct API operations are delegated to the `extruct-api` skill. Do not construct raw HTTP requests — use the bundled CLI via the extruct-api skill.
+
 ## Environment
 
 | Variable | Service |
 |----------|---------|
 | `EXTRUCT_API_TOKEN` | Extruct API |
-
-Base URL: `https://api.extruct.ai/v1`
-
-## Official API Reference
-
-- https://www.extruct.ai/docs/api-reference/introduction
 
 ## Inputs
 
@@ -35,13 +31,15 @@ Base URL: `https://api.extruct.ai/v1`
 
 ## Workflow
 
-This skill has 4 phases. Each phase pauses for user review before proceeding.
+This skill has 5 phases. Each phase pauses for user review before proceeding.
 
 ---
 
 ### Phase A: Competitor Scoping + Search Query Design
 
 Read `market_context.md`. Extract: market description, positioning axes, capability areas, seed companies, geographic scope, stage focus.
+
+Read [references/scoping-framework.md](references/scoping-framework.md) for the full framework.
 
 For each of the 4 competitor levels, draft the scoping and search queries.
 
@@ -138,18 +136,32 @@ Save to `claude-code-gtm/vc-maps/{map-slug}/competitor_scoping.md`.
 
 ### Phase B: Pass 1 — Fast Discovery (Semantic + Lookalike)
 
-Execute the search plan from Phase A using fast methods only.
+Execute the search plan from Phase A. All Extruct operations use the `extruct-api` skill.
+
+**Step 0: Check for existing tables**
+
+Before running any searches, check if the user already has Extruct tables that cover this market:
+
+1. List existing tables via `extruct-api` tables list.
+2. For each table, inspect its name, row count, and columns via `extruct-api` tables get.
+3. If a table already contains companies relevant to a competitor level (e.g., a previously generated "AI code review — direct competitors" table):
+   - Present it to the user: "I found an existing table '{name}' with N companies. Want to reuse it for {level}?"
+   - If the user confirms, skip search for that level — use the existing table directly.
+   - If the table has stale data or missing columns, offer to extend it (add new rows or columns) rather than creating a new one.
+4. If no relevant tables exist, proceed to Step 1.
+
+This avoids duplicate work and saves Extruct credits when the user has already run a previous mapping session.
 
 **Step 1: Run semantic searches**
 
-For each level, run each query via `GET /companies/search`:
+For each level, run each query via `extruct-api` semantic search:
 - Use the queries designed in Phase A
 - Apply filters from market context (geography, size, founding year)
 - `limit=100` per query (up to `200` for direct competitors if needed)
 
 **Step 2: Run lookalike searches**
 
-For levels with seed companies, run `GET /companies/{seed_domain}/similar`:
+For levels with seed companies, run `extruct-api` lookalike search:
 - Apply matching filters
 - `limit=100`
 
@@ -163,11 +175,12 @@ Across levels:
 - If a company appears in multiple levels, assign to the highest-priority level
 - Priority: direct > indirect > adjacent > substitute
 
-**Step 4: Create tables, upload, and assess coverage**
+**Step 4: Create or extend tables, upload, and assess coverage**
 
-Immediately create tables and upload — do NOT ask permission first:
-- `POST /tables` with `kind: "company"`, `name: "{map-slug} — {level} competitors"`
-- Upload domains in batches of 50 via `POST /tables/{id}/rows` with 0.5s between batches
+For levels where an existing table was reused from Step 0, upload only the new (deduplicated) domains that aren't already in the table. For levels without an existing table, create a new one:
+- Create a company table per level: `{map-slug} — {level} competitors`
+- Upload domains in batches via `extruct-api` rows create
+- Do NOT ask permission to create tables — just create them
 
 Then present coverage assessment:
 
@@ -184,8 +197,8 @@ Then present coverage assessment:
 - **Gaps:** Known competitors missing, sub-segments not represented
 
 **Auto-proceed logic:**
-- If all levels are "Sufficient" → skip deep search, go straight to Phase D (enrichment)
-- If any level is "Thin" or "Gaps" → recommend Deep Discovery for that level and ask: "Direct competitors coverage is thin. Want me to run Deep Discovery to find more? Or proceed with what we have?"
+- If all levels are "Sufficient" -> skip deep search, go straight to Phase D (relevance validation)
+- If any level is "Thin" or "Gaps" -> recommend Deep Discovery for that level and ask: "Direct competitors coverage is thin. Want me to run Deep Discovery to find more? Or proceed with what we have?"
 - Do NOT ask "should I create tables?" — just create them
 - Do NOT offer "filter down" as an option — the user can always remove companies from the table later
 
@@ -193,7 +206,7 @@ Then present coverage assessment:
 
 ### Phase C: Pass 2 — Deep Discovery (Optional)
 
-Only run for levels where the user requests deeper coverage.
+Only run for levels where the user requests deeper coverage. Uses the `extruct-api` skill's deep-search commands.
 
 **Step 1: Design Discovery criteria**
 
@@ -202,30 +215,17 @@ Based on what was found (and missing) in Pass 1, design criteria sets:
 - Add criteria for segments that were underrepresented
 - Max 5 criteria per Discovery task
 
-```json
-{
-  "query": "2-3 sentence description of ideal company for this level",
-  "desired_num_results": 50,
-  "criteria": [
-    {"key": "core_product", "name": "Core Product", "criterion": "..."},
-    {"key": "target_market", "name": "Target Market", "criterion": "..."}
-  ]
-}
-```
-
 **Step 2: Run Discovery tasks**
 
-`POST /discovery_tasks` per level.
+Create deep-search tasks via `extruct-api` deep-search create.
 
 **Step 3: Poll until complete**
 
-`GET /discovery_tasks/{task_id}` every 60 seconds until `status` is `done` or `failed`.
+Use `extruct-api` deep-search poll until `status == "done"` or `is_exhausted == true`.
 
 **Step 4: Fetch and integrate results**
 
-`GET /discovery_tasks/{task_id}/results` — fetch all results.
-
-Deduplicate against existing table for this level. Upload new companies to the level's existing table.
+Fetch results via `extruct-api` deep-search results. Deduplicate against existing table for this level. Upload new companies to the level's existing table.
 
 **Step 5: Present updated counts**
 
@@ -245,7 +245,7 @@ Before running expensive enrichment, validate that every company in the tables a
 
 **Step 1: Add a relevance check column**
 
-Add a single `select` column to each table:
+Add a single `select` column to each table via `extruct-api` columns add:
 
 ```json
 {
@@ -254,7 +254,7 @@ Add a single `select` column to each table:
   "key": "market_relevance",
   "value": {
     "agent_type": "research_reasoning",
-    "prompt": "Does {input} operate in the {MARKET_DESCRIPTION} market? Check the company's website and product description. Return ONLY one label.",
+    "prompt": "Does this company operate in the {MARKET_DESCRIPTION} market? Check the company's website and product description. Return ONLY one label.",
     "output_format": "select",
     "labels": ["Yes — core market", "Partially relevant", "No — different market"]
   }
@@ -265,12 +265,12 @@ Customize `{MARKET_DESCRIPTION}` from market_context.md (e.g., "AI-powered legal
 
 **Step 2: Run relevance check and wait for completion**
 
-Trigger `POST /tables/{table_id}/run` for the relevance column only. Poll until complete. This is a cheap `research_reasoning` column — fast to run.
+Run the relevance column via `extruct-api` tables run (scoped to relevance column only). Poll until complete. This is a cheap `research_reasoning` column — fast to run.
 
 **Step 3: Remove irrelevant companies**
 
 Fetch table data. For each row where `market_relevance` = "No — different market":
-- Delete the row via `DELETE /tables/{table_id}/rows/{row_id}`
+- Delete the row via `extruct-api` rows delete
 
 Report:
 
@@ -286,7 +286,7 @@ Companies marked "Partially relevant" stay — they may be indirect or adjacent 
 
 ### Phase E: Competitive Enrichment
 
-Design and run enrichment columns on the validated tables.
+Design and run enrichment columns on the validated tables. All column operations use the `extruct-api` skill. Read the extruct-api skill's `references/column-guide.md` for column design rules.
 
 **Step 1: Select columns**
 
@@ -305,30 +305,30 @@ See [references/enrichment-columns-vc.md](references/enrichment-columns-vc.md) f
 
 Present the column plan and proceed to create. Do not ask for confirmation unless the user has previously requested custom columns.
 
-**Step 3: Create columns**
+**Step 2: Create columns**
 
-For each table, create confirmed columns via `POST /tables/{table_id}/columns`.
+For each table, create confirmed columns via `extruct-api` columns add.
 
-**Step 4: Trigger enrichment**
+**Step 3: Trigger enrichment**
 
-For each table, run `POST /tables/{table_id}/run` scoped to the new column UUIDs.
+For each table, run via `extruct-api` tables run scoped to the new column IDs.
 
 Report total cells queued.
 
-**Step 5: Monitor progress**
+**Step 4: Monitor progress**
 
-Poll each table via `GET /tables/{table_id}/data` every 60 seconds. Report completion percentage.
+Poll each table via `extruct-api` tables poll. Report completion percentage.
 
-**Step 6: Quality spot-check**
+**Step 5: Quality spot-check**
 
-After 50%+ completion on the direct competitors table, fetch 5 rows and display a sample:
+After 50%+ completion on the direct competitors table, fetch 5 rows via `extruct-api` tables data and display a sample:
 - Is funding data correct for known companies?
 - Are key clients reasonable?
 - Is parent ownership accurate?
 
-If quality issues: delete the column (`DELETE /tables/{id}/columns/{column_id}`), adjust the prompt, recreate, re-run.
+If quality issues: delete the column via `extruct-api` columns delete, adjust the prompt, recreate, re-run.
 
-**Step 7: Summarize enrichment results**
+**Step 6: Summarize enrichment results**
 
 Once enrichment completes, present a summary of key findings:
 - Companies with known funding (sorted by total raised)
