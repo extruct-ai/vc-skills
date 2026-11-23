@@ -4,6 +4,8 @@
 
 Maintained by [Extruct AI](https://www.extruct.ai).
 
+Backed by [Grip](https://trygrip.io) — LinkedIn outreach for modern teams.
+
 > **These skills are templates.** They show one way to run VC market mapping workflows using Extruct and Claude Code. Fork them, adapt to your workflow. The skill patterns are the value, the specific integrations are up to you.
 
 ## Install
